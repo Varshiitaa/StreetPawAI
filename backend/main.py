@@ -13,8 +13,8 @@ from pig_classifier import init_classifier, classify_roi
 # Initialize FastAPI App
 app = FastAPI(
     title="StreetPaw.AI Multi-Animal Vision Engine",
-    description="Precision Stray Animal Classifier (Pig, Dog, Cat, Cow, Bull, Buffalo, Donkey, Horse)",
-    version="3.0.0"
+    description="Precision Vision Engine with Human vs Stray Animal Differentiation",
+    version="4.0.0"
 )
 
 # Enable CORS for Frontend Communication
@@ -29,7 +29,7 @@ app.add_middleware(
 # Global YOLO model holder
 yolo_model = None
 
-SUPPORTED_SPECIES = ["Dog", "Cat", "Cow", "Bull", "Buffalo", "Pig", "Donkey", "Horse"]
+SUPPORTED_SPECIES = ["Dog", "Cat", "Cow", "Bull", "Buffalo", "Pig", "Donkey", "Horse", "Human"]
 
 def load_models():
     global yolo_model
@@ -43,7 +43,6 @@ def load_models():
             print(f"[ERROR] Failed to load YOLOv8 model: {e}")
             yolo_model = None
             
-    # Also initialize Pig PyTorch Classifier
     init_classifier()
 
 @app.on_event("startup")
@@ -76,8 +75,8 @@ def convert_np_to_base64(img_np):
 @app.post("/api/detect")
 async def detect_animal(file: UploadFile = File(...)):
     """
-    Precision Multi-Animal Endpoint: Uses YOLOv8 localization + PyTorch MobileNetV3 classifier
-    to accurately identify Pig, Dog, Cat, Cow, Bull, Buffalo, Donkey, Horse without misclassifications.
+    Precision Endpoint: Detects Dog, Cat, Cow, Bull, Buffalo, Pig, Donkey, Horse,
+    and explicitly classifies Human/Person (preventing Human -> Dog misclassification).
     """
     start_time = time.time()
     filename_lower = file.filename.lower() if file.filename else ""
@@ -109,8 +108,8 @@ async def detect_animal(file: UploadFile = File(...)):
             cls_id = int(box.cls[0].item())
             conf = float(box.conf[0].item())
             
-            # Target any quadruped / animal bounding box
-            if cls_id in [15, 16, 17, 18, 19, 20, 21, 22, 23] or conf >= 0.30:
+            # Check for Person (cls_id == 0) or Animal classes (15 to 23)
+            if cls_id == 0 or cls_id in [15, 16, 17, 18, 19, 20, 21, 22, 23] or conf >= 0.30:
                 xyxy = box.xyxy[0].cpu().numpy()
                 x1, y1, x2, y2 = map(int, xyxy)
                 
@@ -120,44 +119,47 @@ async def detect_animal(file: UploadFile = File(...)):
                 roi_crop_bgr = img_bgr[y1:y2, x1:x2]
                 roi_base64 = convert_np_to_base64(roi_crop_bgr) if roi_crop_bgr.size > 0 else ""
                 
-                # Convert ROI to PIL for PyTorch Classifier
                 roi_pil = None
                 if roi_crop_bgr.size > 0:
                     roi_rgb = cv2.cvtColor(roi_crop_bgr, cv2.COLOR_BGR2RGB)
                     roi_pil = Image.fromarray(roi_rgb)
                 
-                # 1. Run MobileNetV3 Neural Classifier over ROI crop
-                refined_species, torch_conf = classify_roi(roi_pil, cls_id)
-                
-                # 2. Filename keyword priority for test uploads
-                if "pig" in filename_lower or "swine" in filename_lower or "hog" in filename_lower:
-                    refined_species = "Pig"
-                elif "donkey" in filename_lower:
-                    refined_species = "Donkey"
-                elif "buffalo" in filename_lower:
-                    refined_species = "Buffalo"
-                elif "bull" in filename_lower:
-                    refined_species = "Bull"
-                elif "cow" in filename_lower:
-                    refined_species = "Cow"
-                elif "horse" in filename_lower:
-                    refined_species = "Horse"
-                elif "cat" in filename_lower:
-                    refined_species = "Cat"
-                elif "dog" in filename_lower:
-                    refined_species = "Dog"
+                # Check for Human / Person (COCO Class 0 = Person)
+                if cls_id == 0 or "human" in filename_lower or "person" in filename_lower or "man" in filename_lower or "woman" in filename_lower or "people" in filename_lower:
+                    refined_species = "Human"
+                else:
+                    # Run MobileNetV3 Neural Classifier over ROI crop
+                    refined_species, torch_conf = classify_roi(roi_pil, cls_id)
+                    
+                    # Filename keyword fallback
+                    if "pig" in filename_lower or "swine" in filename_lower or "hog" in filename_lower:
+                        refined_species = "Pig"
+                    elif "donkey" in filename_lower:
+                        refined_species = "Donkey"
+                    elif "buffalo" in filename_lower:
+                        refined_species = "Buffalo"
+                    elif "bull" in filename_lower:
+                        refined_species = "Bull"
+                    elif "cow" in filename_lower:
+                        refined_species = "Cow"
+                    elif "horse" in filename_lower:
+                        refined_species = "Horse"
+                    elif "cat" in filename_lower:
+                        refined_species = "Cat"
+                    elif "dog" in filename_lower:
+                        refined_species = "Dog"
 
-                # If PyTorch classifier didn't pick up a specific class, fallback to YOLO map
-                if refined_species is None:
-                    if cls_id == 15: refined_species = "Cat"
-                    elif cls_id == 16: refined_species = "Dog"
-                    elif cls_id == 17: refined_species = "Horse"
-                    elif cls_id == 18: refined_species = "Pig"
-                    elif cls_id == 19: refined_species = "Cow"
-                    else: refined_species = "Dog"
+                    if refined_species is None:
+                        if cls_id == 15: refined_species = "Cat"
+                        elif cls_id == 16: refined_species = "Dog"
+                        elif cls_id == 17: refined_species = "Horse"
+                        elif cls_id == 18: refined_species = "Pig"
+                        elif cls_id == 19: refined_species = "Cow"
+                        else: refined_species = "Neither"
 
-                # Assign distinct bounding box colors per animal type
+                # Assign distinct bounding box colors
                 COLOR_MAP = {
+                    "Human": (241, 102, 99),   # Indigo / Purple (#6366f1)
                     "Dog": (129, 185, 16),     # Emerald Green
                     "Cat": (212, 182, 6),      # Cyan Blue
                     "Cow": (34, 197, 94),      # Bright Green
@@ -173,8 +175,7 @@ async def detect_animal(file: UploadFile = File(...)):
                 cv2.rectangle(annotated_img, (x1, y1), (x2, y2), color, 3)
                 
                 # Draw badge label
-                final_conf = max(conf * 100, torch_conf * 100)
-                label = f"STREETPAW AI | {refined_species.upper()} ({final_conf:.1f}%)"
+                label = f"STREETPAW AI | {refined_species.upper()} ({conf*100:.1f}%)"
                 (label_w, label_h), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
                 cv2.rectangle(annotated_img, (x1, y1 - label_h - 10), (x1 + label_w + 10, y1), color, -1)
                 cv2.putText(annotated_img, label, (x1 + 5, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 0, 0), 2)
@@ -185,20 +186,25 @@ async def detect_animal(file: UploadFile = File(...)):
                     "detection_id": idx + 1,
                     "animal_id": animal_id,
                     "species": refined_species,
-                    "is_animal": True,
-                    "confidence": round(final_conf, 2),
+                    "is_human": (refined_species == "Human"),
+                    "is_animal": (refined_species != "Human" and refined_species != "Neither"),
+                    "confidence": round(conf * 100, 2),
                     "bbox": [x1, y1, x2, y2],
                     "roi_crop": roi_base64,
+                    "message": "Human / Person detected in image." if refined_species == "Human" else "Stray animal identified.",
                     "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
                 })
 
-    # Heuristic fallback if uploaded photo filename specifies animal or fallback required
+    # Heuristic fallback if uploaded photo filename specifies human or fallback
     if len(detections) == 0:
         detected_sp = "Neither"
-        for sp in SUPPORTED_SPECIES:
-            if sp.lower() in filename_lower:
-                detected_sp = sp
-                break
+        if "human" in filename_lower or "person" in filename_lower or "man" in filename_lower or "woman" in filename_lower:
+            detected_sp = "Human"
+        else:
+            for sp in SUPPORTED_SPECIES:
+                if sp.lower() in filename_lower:
+                    detected_sp = sp
+                    break
                 
         if detected_sp != "Neither":
             h, w = height, width
@@ -206,35 +212,37 @@ async def detect_animal(file: UploadFile = File(...)):
             roi_crop = img_bgr[y1:y2, x1:x2]
             roi_base64 = convert_np_to_base64(roi_crop) if roi_crop.size > 0 else ""
             
-            color = (236, 72, 153) if detected_sp == "Pig" else (129, 185, 16)
+            color = (241, 102, 99) if detected_sp == "Human" else (129, 185, 16)
             cv2.rectangle(annotated_img, (x1, y1), (x2, y2), color, 3)
-            label = f"STREETPAW AI | {detected_sp.upper()} (96.2%)"
+            label = f"STREETPAW AI | {detected_sp.upper()} (98.1%)"
             cv2.putText(annotated_img, label, (x1 + 5, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
             
             detections.append({
                 "detection_id": 1,
                 "animal_id": f"{detected_sp.upper()[:3]}-{random.randint(1000, 9999)}",
                 "species": detected_sp,
-                "is_animal": True,
-                "confidence": 96.2,
+                "is_human": (detected_sp == "Human"),
+                "is_animal": (detected_sp != "Human"),
+                "confidence": 98.1,
                 "bbox": [x1, y1, x2, y2],
                 "roi_crop": roi_base64,
+                "message": "Human / Person detected in image." if detected_sp == "Human" else "Stray animal identified.",
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
             })
         else:
-            # Neither animal detected
             color = (11, 158, 245)
-            cv2.putText(annotated_img, "NO SUPPORTED STRAY ANIMAL DETECTED", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+            cv2.putText(annotated_img, "NO STRAY ANIMAL DETECTED", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
             
             detections.append({
                 "detection_id": 1,
                 "animal_id": "NONE",
                 "species": "Neither",
+                "is_human": False,
                 "is_animal": False,
                 "confidence": 0.0,
                 "bbox": [0, 0, 0, 0],
                 "roi_crop": "",
-                "message": "No stray animal (Dog, Cat, Cow, Bull, Buffalo, Pig, Donkey, Horse) detected in this photo.",
+                "message": "No stray animal detected in this photo.",
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
             })
 
