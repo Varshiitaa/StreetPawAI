@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { UploadCloud, Camera, CheckCircle2, Download, RefreshCw, Zap, Eye, AlertTriangle, User } from 'lucide-react';
+import { UploadCloud, Camera, CheckCircle2, Download, RefreshCw, Zap, Eye, AlertTriangle, User, Leaf } from 'lucide-react';
 
-// Demo sample SVGs for testing all supported species + human
+// Demo sample SVGs for testing species + human + plant
 const SAMPLE_DOG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%231e293b'/><circle cx='300' cy='180' r='90' fill='%23d97706'/><polygon points='230,120 200,50 270,100' fill='%23b45309'/><polygon points='370,120 400,50 330,100' fill='%23b45309'/><circle cx='270' cy='170' r='12' fill='%23000'/><circle cx='330' cy='170' r='12' fill='%23000'/><text x='300' y='360' font-family='Arial' font-size='20' font-weight='bold' fill='%23ffffff' text-anchor='middle'>STRAY DOG SAMPLE PHOTO</text></svg>";
 
 const SAMPLE_CAT = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%230f172a'/><circle cx='300' cy='190' r='80' fill='%2394a3b8'/><polygon points='230,140 210,60 270,120' fill='%23475569'/><polygon points='370,140 390,60 330,120' fill='%23475569'/><ellipse cx='265' cy='180' rx='12' ry='16' fill='%2322c55e'/><ellipse cx='335' cy='180' rx='12' ry='16' fill='%2322c55e'/><text x='300' y='360' font-family='Arial' font-size='20' font-weight='bold' fill='%23ffffff' text-anchor='middle'>STRAY CAT SAMPLE PHOTO</text></svg>";
 
 const SAMPLE_PIG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23831843'/><ellipse cx='300' cy='200' rx='110' ry='80' fill='%23f472b6'/><ellipse cx='300' cy='220' rx='35' ry='25' fill='%23db2777'/><circle cx='290' cy='220' r='6' fill='%23831843'/><circle cx='310' cy='220' r='6' fill='%23831843'/><circle cx='250' cy='170' r='10' fill='%23000'/><circle cx='350' cy='170' r='10' fill='%23000'/><text x='300' y='360' font-family='Arial' font-size='20' font-weight='bold' fill='%23ffffff' text-anchor='middle'>STRAY PIG SAMPLE PHOTO</text></svg>";
 
-const SAMPLE_HUMAN = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23312e81'/><circle cx='300' cy='150' r='60' fill='%23fed7aa'/><path d='M 180 340 C 180 230, 420 230, 420 340 Z' fill='%234338ca'/><text x='300' y='360' font-family='Arial' font-size='20' font-weight='bold' fill='%23ffffff' text-anchor='middle'>HUMAN / PERSON SAMPLE PHOTO</text></svg>";
+const SAMPLE_PLANT = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23064e3b'/><ellipse cx='300' cy='220' rx='120' ry='120' fill='%2310b981'/><path d='M 300 100 Q 250 220 300 340 M 300 100 Q 350 220 300 340' stroke='%23047857' stroke-width='8'/><text x='300' y='360' font-family='Arial' font-size='20' font-weight='bold' fill='%23ffffff' text-anchor='middle'>PLANT / LEAF / FLOWER PHOTO</text></svg>";
 
-const SAMPLE_OTHER = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23334155'/><rect x='150' y='180' width='300' height='120' rx='10' fill='%2364748b'/><circle cx='220' cy='300' r='30' fill='%230f172a'/><circle cx='380' cy='300' r='30' fill='%230f172a'/><text x='300' y='360' font-family='Arial' font-size='18' font-weight='bold' fill='%23ffffff' text-anchor='middle'>CAR / OBJECT (NEITHER ANIMAL)</text></svg>";
+const SAMPLE_HUMAN = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23312e81'/><circle cx='300' cy='150' r='60' fill='%23fed7aa'/><path d='M 180 340 C 180 230, 420 230, 420 340 Z' fill='%234338ca'/><text x='300' y='360' font-family='Arial' font-size='20' font-weight='bold' fill='%23ffffff' text-anchor='middle'>HUMAN / PERSON SAMPLE PHOTO</text></svg>";
 
 export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, resetDetection }) {
   const [dragActive, setDragActive] = useState(false);
@@ -70,6 +70,7 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
 
   const getSpeciesBadgeStyle = (species) => {
     switch (species) {
+      case 'Plant': return { bg: 'rgba(34, 197, 94, 0.2)', text: '#4ade80', border: '1px solid rgba(34, 197, 94, 0.4)', icon: '🌱' };
       case 'Human': return { bg: 'rgba(99, 102, 241, 0.2)', text: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.4)', icon: '👤' };
       case 'Dog': return { bg: 'rgba(16, 185, 129, 0.15)', text: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', icon: '🐶' };
       case 'Cat': return { bg: 'rgba(6, 182, 212, 0.15)', text: '#38bdf8', border: '1px solid rgba(6, 182, 212, 0.3)', icon: '🐱' };
@@ -93,7 +94,7 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
               <Camera size={24} style={{ color: '#10b981' }} /> Vision Animal Classifier
             </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-              Detects: <strong>Dog, Cat, Pig, Cow, Bull, Buffalo, Donkey, Horse</strong> (accurately identifies <strong>Human / Person</strong>).
+              Detects Stray Animals (<strong>Dog, Cat, Pig, Cow, etc.</strong>) & filters out <strong>Plants, Humans, Objects</strong>.
             </p>
           </div>
           {selectedImagePreview && (
@@ -146,7 +147,7 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
                   gap: '12px'
                 }}>
                   <Zap size={36} style={{ color: '#10b981', animation: 'spin 1s linear infinite' }} />
-                  <p style={{ fontWeight: 700, color: '#34d399', letterSpacing: '0.05em' }}>RUNNING VISION CLASSIFIER...</p>
+                  <p style={{ fontWeight: 700, color: '#34d399', letterSpacing: '0.05em' }}>ANALYZING SPECIES & FILTERING PLANTS...</p>
                 </div>
               )}
             </div>
@@ -169,7 +170,7 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
                 Upload Image File
               </h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '18px' }}>
-                Detects Stray Animals (Dogs, Cats, Pigs, Cows, etc.) & Humans
+                Accurately detects Stray Animals & distinguishes Plants & Humans
               </p>
               <label className="btn-primary">
                 Choose Image File
@@ -204,8 +205,8 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
               <button className="btn-secondary" onClick={() => loadSample(SAMPLE_DOG, 'Dog')} style={{ padding: '6px', fontSize: '0.75rem' }}>🐶 Dog</button>
               <button className="btn-secondary" onClick={() => loadSample(SAMPLE_CAT, 'Cat')} style={{ padding: '6px', fontSize: '0.75rem' }}>🐱 Cat</button>
               <button className="btn-secondary" onClick={() => loadSample(SAMPLE_PIG, 'Pig')} style={{ padding: '6px', fontSize: '0.75rem' }}>🐷 Pig</button>
+              <button className="btn-secondary" onClick={() => loadSample(SAMPLE_PLANT, 'Plant')} style={{ padding: '6px', fontSize: '0.75rem' }}>🌱 Plant</button>
               <button className="btn-secondary" onClick={() => loadSample(SAMPLE_HUMAN, 'Human')} style={{ padding: '6px', fontSize: '0.75rem' }}>👤 Human</button>
-              <button className="btn-secondary" onClick={() => loadSample(SAMPLE_OTHER, 'Other')} style={{ padding: '6px', fontSize: '0.75rem' }}>⚠️ Neither</button>
             </div>
           </div>
         </div>
@@ -278,7 +279,16 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
                   )}
                 </div>
 
-                {det.is_human ? (
+                {det.is_plant ? (
+                  <div style={{ padding: '14px', borderRadius: '12px', background: 'rgba(34, 197, 94, 0.12)', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+                    <p style={{ color: '#4ade80', fontWeight: 700, fontSize: '0.95rem', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Leaf size={18} /> Plant / Foliage Detected (No Animal)
+                    </p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginTop: '4px' }}>
+                      The image contains plants, leaves, or greenery. No stray animal was found in this photo.
+                    </p>
+                  </div>
+                ) : det.is_human ? (
                   <div style={{ padding: '14px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.12)', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
                     <p style={{ color: '#a5b4fc', fontWeight: 700, fontSize: '0.95rem', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <User size={18} /> Human / Person Detected
@@ -326,7 +336,7 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
                       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resultData, null, 2));
                       const downloadAnchor = document.createElement('a');
                       downloadAnchor.setAttribute("href", dataStr);
-                      downloadAnchor.setAttribute("download", `classification_${det.species.toLowerCase()}_${Date.now()}.json`);
+                      downloadAnchor.setAttribute("download", `analysis_${det.species.toLowerCase()}_${Date.now()}.json`);
                       document.body.appendChild(downloadAnchor);
                       downloadAnchor.click();
                       downloadAnchor.remove();
