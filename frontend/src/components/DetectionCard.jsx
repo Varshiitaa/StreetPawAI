@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import { UploadCloud, Camera, CheckCircle2, Download, RefreshCw, Zap, Eye, AlertTriangle, Tag } from 'lucide-react';
 
-// Built-in sample test images
-const SAMPLE_DOG_DATA = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%231e293b'/><circle cx='300' cy='180' r='90' fill='%23d97706'/><polygon points='230,120 200,50 270,100' fill='%23b45309'/><polygon points='370,120 400,50 330,100' fill='%23b45309'/><circle cx='270' cy='170' r='12' fill='%23000'/><circle cx='330' cy='170' r='12' fill='%23000'/><ellipse cx='300' cy='210' rx='25' ry='18' fill='%2378350f'/><path d='M 285 225 Q 300 245 315 225' stroke='%23ef4444' stroke-width='6' fill='none'/><rect x='150' y='250' width='300' height='120' rx='20' fill='%23d97706'/><text x='300' y='360' font-family='Arial' font-size='20' font-weight='bold' fill='%23ffffff' text-anchor='middle'>STRAY DOG SAMPLE PHOTO</text></svg>";
+// Demo sample SVGs for testing all supported species
+const SAMPLE_DOG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%231e293b'/><circle cx='300' cy='180' r='90' fill='%23d97706'/><polygon points='230,120 200,50 270,100' fill='%23b45309'/><polygon points='370,120 400,50 330,100' fill='%23b45309'/><circle cx='270' cy='170' r='12' fill='%23000'/><circle cx='330' cy='170' r='12' fill='%23000'/><text x='300' y='360' font-family='Arial' font-size='20' font-weight='bold' fill='%23ffffff' text-anchor='middle'>STRAY DOG SAMPLE PHOTO</text></svg>";
 
-const SAMPLE_CAT_DATA = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%230f172a'/><circle cx='300' cy='190' r='80' fill='%2394a3b8'/><polygon points='230,140 210,60 270,120' fill='%23475569'/><polygon points='370,140 390,60 330,120' fill='%23475569'/><ellipse cx='265' cy='180' rx='12' ry='16' fill='%2322c55e'/><ellipse cx='335' cy='180' rx='12' ry='16' fill='%2322c55e'/><polygon points='300,200 290,215 310,215' fill='%23f43f5e'/><path d='M 230 195 L 160 190 M 230 205 L 160 210 M 370 195 L 440 190 M 370 205 L 440 210' stroke='%23cbd5e1' stroke-width='3'/><text x='300' y='360' font-family='Arial' font-size='20' font-weight='bold' fill='%23ffffff' text-anchor='middle'>STRAY CAT SAMPLE PHOTO</text></svg>";
+const SAMPLE_CAT = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%230f172a'/><circle cx='300' cy='190' r='80' fill='%2394a3b8'/><polygon points='230,140 210,60 270,120' fill='%23475569'/><polygon points='370,140 390,60 330,120' fill='%23475569'/><ellipse cx='265' cy='180' rx='12' ry='16' fill='%2322c55e'/><ellipse cx='335' cy='180' rx='12' ry='16' fill='%2322c55e'/><text x='300' y='360' font-family='Arial' font-size='20' font-weight='bold' fill='%23ffffff' text-anchor='middle'>STRAY CAT SAMPLE PHOTO</text></svg>";
 
-const SAMPLE_OTHER_DATA = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23334155'/><circle cx='300' cy='180' r='70' fill='%2364748b'/><rect x='200' y='260' width='200' height='90' rx='10' fill='%23475569'/><text x='300' y='360' font-family='Arial' font-size='18' font-weight='bold' fill='%23ffffff' text-anchor='middle'>CAR / BUILDING / OBJECT (OTHER)</text></svg>";
+const SAMPLE_PIG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23831843'/><ellipse cx='300' cy='200' rx='110' ry='80' fill='%23f472b6'/><ellipse cx='300' cy='220' rx='35' ry='25' fill='%23db2777'/><circle cx='290' cy='220' r='6' fill='%23831843'/><circle cx='310' cy='220' r='6' fill='%23831843'/><circle cx='250' cy='170' r='10' fill='%23000'/><circle cx='350' cy='170' r='10' fill='%23000'/><text x='300' y='360' font-family='Arial' font-size='20' font-weight='bold' fill='%23ffffff' text-anchor='middle'>STRAY PIG SAMPLE PHOTO</text></svg>";
+
+const SAMPLE_COW = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%2314532d'/><ellipse cx='300' cy='200' rx='130' ry='90' fill='%23f8fafc'/><circle cx='240' cy='180' r='30' fill='%230f172a'/><circle cx='340' cy='230' r='25' fill='%230f172a'/><text x='300' y='360' font-family='Arial' font-size='20' font-weight='bold' fill='%23ffffff' text-anchor='middle'>STRAY COW SAMPLE PHOTO</text></svg>";
+
+const SAMPLE_DONKEY = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23581c87'/><ellipse cx='300' cy='210' rx='90' ry='70' fill='%2394a3b8'/><polygon points='230,150 200,30 260,120' fill='%2364748b'/><polygon points='370,150 400,30 340,120' fill='%2364748b'/><text x='300' y='360' font-family='Arial' font-size='20' font-weight='bold' fill='%23ffffff' text-anchor='middle'>STRAY DONKEY SAMPLE PHOTO</text></svg>";
+
+const SAMPLE_OTHER = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23334155'/><rect x='150' y='180' width='300' height='120' rx='10' fill='%2364748b'/><circle cx='220' cy='300' r='30' fill='%230f172a'/><circle cx='380' cy='300' r='30' fill='%230f172a'/><text x='300' y='360' font-family='Arial' font-size='18' font-weight='bold' fill='%23ffffff' text-anchor='middle'>CAR / OBJECT (NEITHER ANIMAL)</text></svg>";
 
 export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, resetDetection }) {
   const [dragActive, setDragActive] = useState(false);
@@ -52,7 +58,7 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
     fetch(sampleData)
       .then(res => res.blob())
       .then(blob => {
-        const file = new File([blob], `sample_${species.toLowerCase()}.svg`, { type: 'image/svg+xml' });
+        const file = new File([blob], `${species.toLowerCase()}_sample.svg`, { type: 'image/svg+xml' });
         setSelectedFile(file);
         setSelectedImagePreview(sampleData);
       });
@@ -64,6 +70,20 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
     }
   };
 
+  const getSpeciesBadgeStyle = (species) => {
+    switch (species) {
+      case 'Dog': return { bg: 'rgba(16, 185, 129, 0.15)', text: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', icon: '🐶' };
+      case 'Cat': return { bg: 'rgba(6, 182, 212, 0.15)', text: '#38bdf8', border: '1px solid rgba(6, 182, 212, 0.3)', icon: '🐱' };
+      case 'Pig': return { bg: 'rgba(236, 72, 153, 0.15)', text: '#f472b6', border: '1px solid rgba(236, 72, 153, 0.3)', icon: '🐷' };
+      case 'Cow': return { bg: 'rgba(34, 197, 94, 0.15)', text: '#4ade80', border: '1px solid rgba(34, 197, 94, 0.3)', icon: '🐮' };
+      case 'Bull': return { bg: 'rgba(239, 68, 68, 0.15)', text: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', icon: '🐂' };
+      case 'Buffalo': return { bg: 'rgba(148, 163, 184, 0.15)', text: '#cbd5e1', border: '1px solid rgba(148, 163, 184, 0.3)', icon: '🐃' };
+      case 'Donkey': return { bg: 'rgba(168, 85, 247, 0.15)', text: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.3)', icon: '🫏' };
+      case 'Horse': return { bg: 'rgba(245, 158, 11, 0.15)', text: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)', icon: '🐴' };
+      default: return { bg: 'rgba(245, 158, 11, 0.15)', text: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)', icon: '⚠️' };
+    }
+  };
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: resultData ? '1fr 1fr' : '1fr', gap: '28px' }}>
       {/* Upload & Input Panel */}
@@ -71,10 +91,10 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <div>
             <h2 style={{ fontSize: '1.3rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Camera size={24} style={{ color: '#10b981' }} /> Step 1: Detect Animal (Dog / Cat / Neither)
+              <Camera size={24} style={{ color: '#10b981' }} /> Multi-Species Animal Detection
             </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-              Upload any photo to detect if it contains a Dog, a Cat, or Neither.
+              Detects: <strong>Dog, Cat, Cow, Bull, Buffalo, Pig, Donkey, Horse</strong>.
             </p>
           </div>
           {selectedImagePreview && (
@@ -112,7 +132,7 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
             <div style={{ position: 'relative', width: '100%', maxHeight: '360px', overflow: 'hidden', borderRadius: '12px' }}>
               <img 
                 src={selectedImagePreview} 
-                alt="Uploaded Stray Animal" 
+                alt="Uploaded Animal" 
                 style={{ width: '100%', maxHeight: '360px', objectFit: 'contain', borderRadius: '12px' }} 
               />
               {isAnalyzing && (
@@ -127,7 +147,7 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
                   gap: '12px'
                 }}>
                   <Zap size={36} style={{ color: '#10b981', animation: 'spin 1s linear infinite' }} />
-                  <p style={{ fontWeight: 700, color: '#34d399', letterSpacing: '0.05em' }}>RUNNING AI ANIMAL DETECTION...</p>
+                  <p style={{ fontWeight: 700, color: '#34d399', letterSpacing: '0.05em' }}>ANALYZING ANIMAL SPECIES...</p>
                 </div>
               )}
             </div>
@@ -147,10 +167,10 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
                 <UploadCloud size={32} />
               </div>
               <h3 style={{ fontSize: '1.05rem', fontWeight: 600, marginBottom: '6px' }}>
-                Drag & Drop Photo Here
+                Upload Any Animal Photo
               </h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '18px' }}>
-                Upload photo to check for Dog, Cat, or Neither
+                Accurately classifies Dog, Cat, Pig, Cow, Bull, Buffalo, Donkey, Horse
               </p>
               <label className="btn-primary">
                 Choose Image File
@@ -170,39 +190,24 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
               style={{ width: '100%', padding: '14px', fontSize: '1.05rem' }}
             >
               {isAnalyzing ? (
-                <> <RefreshCw size={20} className="spin" /> Processing AI Detection... </>
+                <> <RefreshCw size={20} className="spin" /> Executing Vision Classifier... </>
               ) : (
-                <> <Zap size={20} /> Run Animal Detection </>
+                <> <Zap size={20} /> Detect Animal Species </>
               )}
             </button>
           )}
 
           <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '10px', fontWeight: 600 }}>
-              TEST WITH DEMO PHOTOS:
+              QUICK SPECIES DEMOS:
             </p>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
-                className="btn-secondary" 
-                onClick={() => loadSample(SAMPLE_DOG_DATA, 'Dog')}
-                style={{ flex: 1, padding: '8px 10px', fontSize: '0.78rem' }}
-              >
-                <Eye size={13} style={{ color: '#10b981' }} /> Dog Demo
-              </button>
-              <button 
-                className="btn-secondary" 
-                onClick={() => loadSample(SAMPLE_CAT_DATA, 'Cat')}
-                style={{ flex: 1, padding: '8px 10px', fontSize: '0.78rem' }}
-              >
-                <Eye size={13} style={{ color: '#06b6d4' }} /> Cat Demo
-              </button>
-              <button 
-                className="btn-secondary" 
-                onClick={() => loadSample(SAMPLE_OTHER_DATA, 'Other')}
-                style={{ flex: 1, padding: '8px 10px', fontSize: '0.78rem' }}
-              >
-                <Eye size={13} style={{ color: '#f59e0b' }} /> Neither Demo
-              </button>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+              <button className="btn-secondary" onClick={() => loadSample(SAMPLE_DOG, 'Dog')} style={{ padding: '6px', fontSize: '0.75rem' }}>🐶 Dog</button>
+              <button className="btn-secondary" onClick={() => loadSample(SAMPLE_CAT, 'Cat')} style={{ padding: '6px', fontSize: '0.75rem' }}>🐱 Cat</button>
+              <button className="btn-secondary" onClick={() => loadSample(SAMPLE_PIG, 'Pig')} style={{ padding: '6px', fontSize: '0.75rem' }}>🐷 Pig</button>
+              <button className="btn-secondary" onClick={() => loadSample(SAMPLE_COW, 'Cow')} style={{ padding: '6px', fontSize: '0.75rem' }}>🐮 Cow</button>
+              <button className="btn-secondary" onClick={() => loadSample(SAMPLE_DONKEY, 'Donkey')} style={{ padding: '6px', fontSize: '0.75rem' }}>🫏 Donkey</button>
+              <button className="btn-secondary" onClick={() => loadSample(SAMPLE_OTHER, 'Other')} style={{ padding: '6px', fontSize: '0.75rem' }}>⚠️ Neither</button>
             </div>
           </div>
         </div>
@@ -211,20 +216,13 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
       {/* Detection Results Output Panel */}
       {resultData && (
         <div className="glass-panel glass-card-glow" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Header Badge */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              {resultData.detections[0]?.species === 'Neither' ? (
-                <span className="badge badge-amber">
-                  <AlertTriangle size={12} /> NEITHER DOG NOR CAT
-                </span>
-              ) : (
-                <span className="badge badge-emerald">
-                  <CheckCircle2 size={12} /> ANIMAL DETECTED
-                </span>
-              )}
+              <span className="badge badge-emerald">
+                <CheckCircle2 size={12} /> ANIMAL SPECIES ANALYZED
+              </span>
               <h2 style={{ fontSize: '1.35rem', fontWeight: 700, marginTop: '6px' }}>
-                Detection Analysis
+                Detection Results
               </h2>
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -244,101 +242,95 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
             />
           </div>
 
-          {/* Detection Items */}
-          {resultData.detections && resultData.detections.map((det, index) => (
-            <div key={index} style={{
-              background: 'rgba(15, 23, 42, 0.7)',
-              borderRadius: '14px',
-              padding: '18px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '14px'
-            }}>
-              {/* Species Badge */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  {det.species === 'Dog' && (
-                    <span className="badge badge-emerald" style={{ fontSize: '0.95rem', padding: '6px 16px' }}>
-                      🐶 DOG DETECTED
-                    </span>
-                  )}
-                  {det.species === 'Cat' && (
-                    <span className="badge badge-cyan" style={{ fontSize: '0.95rem', padding: '6px 16px' }}>
-                      🐱 CAT DETECTED
-                    </span>
-                  )}
-                  {det.species === 'Neither' && (
-                    <span className="badge badge-amber" style={{ fontSize: '0.95rem', padding: '6px 16px' }}>
-                      ⚠️ NEITHER CAT NOR DOG
-                    </span>
+          {/* Detections */}
+          {resultData.detections && resultData.detections.map((det, index) => {
+            const badgeStyle = getSpeciesBadgeStyle(det.species);
+            return (
+              <div key={index} style={{
+                background: 'rgba(15, 23, 42, 0.7)',
+                borderRadius: '14px',
+                padding: '18px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '14px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{
+                    background: badgeStyle.bg,
+                    color: badgeStyle.text,
+                    border: badgeStyle.border,
+                    padding: '6px 16px',
+                    borderRadius: '9999px',
+                    fontWeight: 700,
+                    fontSize: '0.95rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <span>{badgeStyle.icon}</span> {det.species.toUpperCase()} DETECTED
+                  </div>
+                  {det.is_animal && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Confidence:</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: '#34d399', fontSize: '1.1rem' }}>
+                        {det.confidence}%
+                      </span>
+                    </div>
                   )}
                 </div>
-                {det.is_cat_or_dog && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Confidence:</span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: '#34d399', fontSize: '1.1rem' }}>
-                      {det.confidence}%
-                    </span>
+
+                {det.is_animal ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: det.roi_crop ? '110px 1fr' : '1fr', gap: '16px', alignItems: 'center' }}>
+                    {det.roi_crop && (
+                      <div style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.2)', background: '#000', width: '110px', height: '110px' }}>
+                        <img src={det.roi_crop} alt="Cropped ROI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <span style={{ display: 'block', fontSize: '0.65rem', textAlign: 'center', background: 'rgba(0,0,0,0.85)', color: '#94a3b8', fontWeight: 600 }}>CROPPED ROI</span>
+                      </div>
+                    )}
+                    <div>
+                      <div style={{ marginBottom: '8px' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bounding Box Coordinates:</span>
+                        <p style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#f8fafc', fontSize: '0.9rem', marginTop: '2px' }}>
+                          [{det.bbox.join(', ')}]
+                        </p>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Species Identified:</span>
+                        <p style={{ fontWeight: 600, color: badgeStyle.text, fontSize: '0.95rem', marginTop: '2px' }}>
+                          {det.species} (Confirmed Stray Animal)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                    <p style={{ color: '#fbbf24', fontWeight: 600, fontSize: '0.9rem', margin: 0 }}>
+                      ⚠️ {det.message}
+                    </p>
                   </div>
                 )}
-              </div>
 
-              {/* Result Details */}
-              {det.is_cat_or_dog ? (
-                <div style={{ display: 'grid', gridTemplateColumns: det.roi_crop ? '110px 1fr' : '1fr', gap: '16px', alignItems: 'center' }}>
-                  {det.roi_crop && (
-                    <div style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.2)', background: '#000', width: '110px', height: '110px' }}>
-                      <img src={det.roi_crop} alt="Cropped ROI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <span style={{ display: 'block', fontSize: '0.65rem', textAlign: 'center', background: 'rgba(0,0,0,0.85)', color: '#94a3b8', fontWeight: 600 }}>CROPPED ROI</span>
-                    </div>
-                  )}
-                  <div>
-                    <div style={{ marginBottom: '8px' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bounding Box Coordinates:</span>
-                      <p style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#f8fafc', fontSize: '0.9rem', marginTop: '2px' }}>
-                        [{det.bbox.join(', ')}]
-                      </p>
-                    </div>
-                    <div>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Result:</span>
-                      <p style={{ fontWeight: 600, color: '#34d399', fontSize: '0.88rem', marginTop: '2px' }}>
-                        Confirmed stray animal ({det.species}) found in image.
-                      </p>
-                    </div>
-                  </div>
+                <div style={{ display: 'flex', gap: '10px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
+                  <button 
+                    className="btn-primary" 
+                    style={{ width: '100%', padding: '8px', fontSize: '0.82rem', justifyContent: 'center' }}
+                    onClick={() => {
+                      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resultData, null, 2));
+                      const downloadAnchor = document.createElement('a');
+                      downloadAnchor.setAttribute("href", dataStr);
+                      downloadAnchor.setAttribute("download", `animal_detection_${det.species.toLowerCase()}_${Date.now()}.json`);
+                      document.body.appendChild(downloadAnchor);
+                      downloadAnchor.click();
+                      downloadAnchor.remove();
+                    }}
+                  >
+                    <Download size={14} /> Download Detection Data (.JSON)
+                  </button>
                 </div>
-              ) : (
-                <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-                  <p style={{ color: '#fbbf24', fontWeight: 600, fontSize: '0.9rem', margin: 0 }}>
-                    ⚠️ {det.message}
-                  </p>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '4px' }}>
-                    The uploaded image does not contain a recognizable dog or cat. Please upload a clearer photo of a stray dog or cat.
-                  </p>
-                </div>
-              )}
-
-              {/* Download Button */}
-              <div style={{ display: 'flex', gap: '10px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
-                <button 
-                  className="btn-primary" 
-                  style={{ width: '100%', padding: '8px', fontSize: '0.82rem', justifyContent: 'center' }}
-                  onClick={() => {
-                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resultData, null, 2));
-                    const downloadAnchor = document.createElement('a');
-                    downloadAnchor.setAttribute("href", dataStr);
-                    downloadAnchor.setAttribute("download", `detection_result_${Date.now()}.json`);
-                    document.body.appendChild(downloadAnchor);
-                    downloadAnchor.click();
-                    downloadAnchor.remove();
-                  }}
-                >
-                  <Download size={14} /> Download Detection Data (.JSON)
-                </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
