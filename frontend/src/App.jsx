@@ -4,7 +4,7 @@ import DetectionCard from './components/DetectionCard';
 import MultiAgentWorkflow from './components/MultiAgentWorkflow';
 import HotspotMap from './components/HotspotMap';
 import AnimalVault from './components/AnimalVault';
-import { PawPrint, Cpu, Activity, ShieldCheck, Heart, Sparkles, CheckCircle2 } from 'lucide-react';
+import { PawPrint, Cpu, Sparkles } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('detect');
@@ -40,34 +40,26 @@ export default function App() {
         const data = await response.json();
         setDetectionResult(data);
       } else {
-        // Fallback local simulation if backend API is currently initializing
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Fallback simulation preview
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
-        // Convert image file to data URL preview for simulation
         const reader = new FileReader();
         reader.onload = (e) => {
           const previewUrl = e.target.result;
+          const isCat = imageFile.name.toLowerCase().includes('cat');
           setDetectionResult({
             success: true,
-            processing_time_ms: 142.5,
+            processing_time_ms: 128.4,
             total_animals_detected: 1,
             annotated_image: previewUrl,
             detections: [
               {
                 detection_id: 1,
-                animal_id: `PAW-${Math.floor(1000 + Math.random() * 9000)}`,
-                species: imageFile.name.toLowerCase().includes('cat') ? "Cat" : "Dog",
+                animal_id: `ANIMAL-${Math.floor(1000 + Math.random() * 9000)}`,
+                species: isCat ? "Cat" : "Dog",
                 confidence: 96.8,
                 bbox: [80, 60, 480, 340],
                 roi_crop: previewUrl,
-                estimated_breed: imageFile.name.toLowerCase().includes('cat') ? "Indian Tabby Street Cat" : "Indian Pariah Dog (Desi)",
-                health_assessment: {
-                  condition: "Healthy Coat / Normal",
-                  severity: "Low",
-                  description: "No visible wounds or severe skin inflammation detected.",
-                  confidence: 0.94
-                },
-                re_id_status: "New Stray Animal Profile Created",
                 timestamp: new Date().toLocaleString()
               }
             ]
@@ -116,7 +108,7 @@ export default function App() {
               </span>
             </div>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>
-              AI-Driven Stray Animal Detection, Health Assessment & Tracking
+              Step 1: Stray Animal Detection Engine (Dogs & Cats)
             </h2>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -125,12 +117,8 @@ export default function App() {
               <p style={{ fontWeight: 700, color: '#10b981', margin: 0 }}>YOLOv8 Nano</p>
             </div>
             <div style={{ textAlign: 'center', padding: '8px 16px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px' }}>
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Target Classes</span>
+              <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Target Species</span>
               <p style={{ fontWeight: 700, color: '#06b6d4', margin: 0 }}>Dog & Cat</p>
-            </div>
-            <div style={{ textAlign: 'center', padding: '8px 16px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px' }}>
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Multi-Agents</span>
-              <p style={{ fontWeight: 700, color: '#8b5cf6', margin: 0 }}>9 Agents Active</p>
             </div>
           </div>
         </div>
