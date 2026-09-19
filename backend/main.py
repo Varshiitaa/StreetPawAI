@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # Initialize FastAPI App
 app = FastAPI(
     title="StreetPaw.AI Animal Detection Engine",
-    description="Step 1: Stray Animal Detection (Dog & Cat)",
+    description="Step 1: Stray Animal Detection (Dog / Cat / Neither)",
     version="1.0.0"
 )
 
@@ -76,8 +76,8 @@ def convert_np_to_base64(img_np):
 @app.post("/api/detect")
 async def detect_animal(file: UploadFile = File(...)):
     """
-    Core Step 1 Endpoint: Receives photo, runs YOLOv8 detection specifically for Dogs and Cats,
-    draws bounding boxes with confidence scores, extracts cropped ROI, and returns detection results.
+    Core Step 1 Endpoint: Receives photo, runs YOLOv8 detection for Dogs and Cats.
+    If neither dog nor cat is detected, explicitly returns 'Neither Cat nor Dog'.
     """
     start_time = time.time()
     
@@ -108,13 +108,13 @@ async def detect_animal(file: UploadFile = File(...)):
             cls_id = int(box.cls[0].item())
             conf = float(box.conf[0].item())
             
-            # Strict filter for Dogs (16) and Cats (15)
+            # Filter specifically for Cats (15) and Dogs (16)
             if cls_id in ANIMAL_CLASSES and conf >= 0.35:
                 species_name = ANIMAL_CLASSES[cls_id]
                 xyxy = box.xyxy[0].cpu().numpy()
                 x1, y1, x2, y2 = map(int, xyxy)
                 
-                # Keep within bounds
+                # Boundaries check
                 x1, y1 = max(0, x1), max(0, y1)
                 x2, y2 = min(width, x2), min(height, y2)
                 
@@ -122,7 +122,7 @@ async def detect_animal(file: UploadFile = File(...)):
                 roi_crop = img_bgr[y1:y2, x1:x2]
                 roi_base64 = convert_np_to_base64(roi_crop) if roi_crop.size > 0 else ""
                 
-                # Bounding box colors: Emerald green for Dog (#10b981), Cyan for Cat (#06b6d4)
+                # Color coding: Emerald green for Dog (#10b981), Cyan for Cat (#06b6d4)
                 color = (129, 185, 16) if species_name == "Dog" else (212, 182, 6)
                 
                 # Draw bounding box
@@ -140,31 +140,28 @@ async def detect_animal(file: UploadFile = File(...)):
                     "detection_id": idx + 1,
                     "animal_id": animal_id,
                     "species": species_name,
+                    "is_cat_or_dog": True,
                     "confidence": round(conf * 100, 2),
                     "bbox": [x1, y1, x2, y2],
                     "roi_crop": roi_base64,
                     "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
                 })
 
-    # Heuristic fallback if uploaded image has non-standard dimensions or demo test image
+    # If NO dog or cat was detected in the photo
     if len(detections) == 0:
-        h, w = height, width
-        x1, y1, x2, y2 = int(w * 0.15), int(h * 0.15), int(w * 0.85), int(h * 0.85)
-        roi_crop = img_bgr[y1:y2, x1:x2]
-        roi_base64 = convert_np_to_base64(roi_crop) if roi_crop.size > 0 else ""
-        
-        color = (129, 185, 16)
-        cv2.rectangle(annotated_img, (x1, y1), (x2, y2), color, 3)
-        label = "STREETPAW AI | DOG (94.2%)"
-        cv2.putText(annotated_img, label, (x1 + 5, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+        # Draw amber warning badge on image
+        color = (11, 158, 245) # Amber #f59e0b in BGR
+        cv2.putText(annotated_img, "NEITHER DOG NOR CAT DETECTED", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
         
         detections.append({
             "detection_id": 1,
-            "animal_id": f"ANIMAL-{random.randint(1000, 9999)}",
-            "species": "Dog",
-            "confidence": 94.2,
-            "bbox": [x1, y1, x2, y2],
-            "roi_crop": roi_base64,
+            "animal_id": "NONE",
+            "species": "Neither",
+            "is_cat_or_dog": False,
+            "confidence": 0.0,
+            "bbox": [0, 0, 0, 0],
+            "roi_crop": "",
+            "message": "No stray dog or cat detected in this photo.",
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
         })
 
@@ -174,7 +171,7 @@ async def detect_animal(file: UploadFile = File(...)):
     return {
         "success": True,
         "processing_time_ms": processing_time,
-        "total_animals_detected": len(detections),
+        "total_animals_detected": len([d for d in detections if d["is_cat_or_dog"]]),
         "annotated_image": annotated_base64,
         "detections": detections
     }
