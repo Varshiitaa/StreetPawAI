@@ -5,7 +5,7 @@ import DetectionCard from './components/DetectionCard';
 import MultiAgentWorkflow from './components/MultiAgentWorkflow';
 import HotspotMap from './components/HotspotMap';
 import AnimalVault from './components/AnimalVault';
-import { PawPrint, Sparkles } from 'lucide-react';
+import { PawPrint, Sparkles, Heart } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('detect');
@@ -93,45 +93,45 @@ export default function App() {
     setDetectionResult(null);
   };
 
+  const scrollToImplementation = () => {
+    const el = document.getElementById('project-implementation-section');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Navigation Header */}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} apiStatus={apiStatus} />
+      {/* 1. FULLSCREEN (100vh) VIDEO HERO LANDING COVER */}
+      <HeroVideoBanner onExploreClick={scrollToImplementation} />
 
-      {/* Main Container */}
-      <div style={{
-        padding: '28px 32px 18px',
-        maxWidth: '1400px',
-        margin: '0 auto',
-        width: '100%'
-      }}>
-        {/* Animated Dog Video Hero Banner */}
-        <HeroVideoBanner />
+      {/* 2. PROJECT IMPLEMENTATION SECTION (SCROLL TARGET) */}
+      <div id="project-implementation-section">
+        {/* Sticky Header Navbar */}
+        <Navbar activeTab={activeTab} setActiveTab={setActiveTab} apiStatus={apiStatus} />
+
+        {/* Implementation Content Container */}
+        <main style={{
+          flex: 1,
+          padding: '36px 32px 48px',
+          maxWidth: '1400px',
+          margin: '0 auto',
+          width: '100%'
+        }}>
+          {activeTab === 'detect' && (
+            <DetectionCard 
+              onAnalyze={handleAnalyzeImage}
+              isAnalyzing={isAnalyzing}
+              resultData={detectionResult}
+              resetDetection={resetDetection}
+            />
+          )}
+
+          {activeTab === 'pipeline' && <MultiAgentWorkflow />}
+
+          {activeTab === 'hotspot' && <HotspotMap />}
+
+          {activeTab === 'vault' && <AnimalVault />}
+        </main>
       </div>
-
-      {/* Main App Content Body */}
-      <main style={{
-        flex: 1,
-        padding: '0 32px 48px',
-        maxWidth: '1400px',
-        margin: '0 auto',
-        width: '100%'
-      }}>
-        {activeTab === 'detect' && (
-          <DetectionCard 
-            onAnalyze={handleAnalyzeImage}
-            isAnalyzing={isAnalyzing}
-            resultData={detectionResult}
-            resetDetection={resetDetection}
-          />
-        )}
-
-        {activeTab === 'pipeline' && <MultiAgentWorkflow />}
-
-        {activeTab === 'hotspot' && <HotspotMap />}
-
-        {activeTab === 'vault' && <AnimalVault />}
-      </main>
 
       {/* Footer */}
       <footer style={{

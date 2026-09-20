@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
-import { Play, Pause, Volume2, VolumeX, Sparkles, Heart, ShieldCheck } from 'lucide-react';
+import { ChevronDown, Play, Pause, Volume2, VolumeX, Sparkles, PawPrint, ShieldCheck, Heart } from 'lucide-react';
 
-export default function HeroVideoBanner() {
+export default function HeroVideoBanner({ onExploreClick }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
@@ -24,163 +24,224 @@ export default function HeroVideoBanner() {
     }
   };
 
+  const scrollToImplementation = () => {
+    const target = document.getElementById('project-implementation-section');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth' });
+    } else if (onExploreClick) {
+      onExploreClick();
+    }
+  };
+
   return (
-    <div className="glass-panel" style={{
-      padding: '24px',
-      marginBottom: '28px',
-      background: 'linear-gradient(135deg, rgba(255, 126, 103, 0.12) 0%, rgba(16, 185, 129, 0.12) 50%, rgba(167, 139, 250, 0.12) 100%)',
-      border: '1px solid rgba(255, 126, 103, 0.3)',
-      boxShadow: '0 16px 48px rgba(0, 0, 0, 0.45)',
+    <section style={{
+      position: 'relative',
+      width: '100vw',
+      height: '100vh',
+      marginLeft: 'calc(-50vw + 50%)',
+      marginTop: '-28px',
+      marginBottom: '40px',
       overflow: 'hidden',
-      position: 'relative'
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      color: '#ffffff'
     }}>
+      {/* Background Fullscreen Video */}
+      <video
+        ref={videoRef}
+        src="/dog_animation.mp4"
+        autoPlay
+        loop
+        muted={isMuted}
+        playsInline
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          zIndex: 1
+        }}
+      />
+
+      {/* Dark Vignette Overlay for Cinema Look */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1.1fr 0.9fr',
-        gap: '28px',
-        alignItems: 'center'
+        position: 'absolute',
+        inset: 0,
+        background: 'radial-gradient(circle at center, rgba(11, 15, 25, 0.4) 0%, rgba(11, 15, 25, 0.85) 75%, rgba(11, 15, 25, 0.98) 100%)',
+        zIndex: 2
+      }} />
+
+      {/* Floating Header Badges */}
+      <div style={{
+        position: 'absolute',
+        top: '28px',
+        left: '40px',
+        zIndex: 10,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px'
       }}>
-        {/* Text Details & Branding */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span className="badge badge-coral">
-              <Sparkles size={12} /> LIVE ANIMATED DOG COMPANION
-            </span>
-            <span className="badge badge-emerald">
-              <ShieldCheck size={12} /> AI VISION READY
-            </span>
-          </div>
-
-          <h2 style={{ fontSize: '2rem', fontWeight: 800, lineHeight: '1.25', marginBottom: '12px' }} className="gradient-text">
-            Meet Your Real-Looking AI Dog Companion 🐾
-          </h2>
-
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.96rem', lineHeight: '1.6', marginBottom: '20px' }}>
-            StreetPaw.AI combines deep learning vision models with real-time video companions to help protect and rescue stray dogs, cats, pigs, cows, and other quadrupeds.
-          </p>
-
-          {/* Quick Metrics Badges */}
-          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-            <div style={{
-              background: 'rgba(18, 24, 38, 0.7)',
-              padding: '10px 16px',
-              borderRadius: '16px',
-              border: '1px solid rgba(255, 126, 103, 0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}>
-              <Heart size={20} color="#ff7e67" fill="#ff7e67" />
-              <div>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Mascot Status</span>
-                <p style={{ fontWeight: 800, fontSize: '0.9rem', color: '#ff7e67', margin: 0 }}>Active & Happy 🐾</p>
-              </div>
-            </div>
-
-            <div style={{
-              background: 'rgba(18, 24, 38, 0.7)',
-              padding: '10px 16px',
-              borderRadius: '16px',
-              border: '1px solid rgba(16, 185, 129, 0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}>
-              <Sparkles size={20} color="#34d399" />
-              <div>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Detection Speed</span>
-                <p style={{ fontWeight: 800, fontSize: '0.9rem', color: '#34d399', margin: 0 }}>~140ms Latency</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Animated Dog Video Frame */}
         <div style={{
-          position: 'relative',
-          borderRadius: '20px',
-          overflow: 'hidden',
-          boxShadow: '0 12px 36px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 126, 103, 0.3)',
-          border: '2px solid rgba(255, 126, 103, 0.4)',
-          maxHeight: '300px',
-          background: '#000'
+          width: '44px',
+          height: '44px',
+          borderRadius: '14px',
+          background: 'linear-gradient(135deg, #ff7e67 0%, #10b981 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 0 25px rgba(255, 126, 103, 0.5)',
+          color: '#fff'
         }}>
-          <video
-            ref={videoRef}
-            src="/dog_animation.mp4"
-            autoPlay
-            loop
-            muted={isMuted}
-            playsInline
-            style={{
-              width: '100%',
-              height: '300px',
-              objectFit: 'cover',
-              display: 'block'
-            }}
-          />
-
-          {/* Video Controls Overlay */}
-          <div style={{
-            position: 'absolute',
-            bottom: '12px',
-            right: '12px',
-            display: 'flex',
-            gap: '8px',
-            zIndex: 10
-          }}>
-            <button
-              onClick={togglePlay}
-              className="btn-secondary"
-              style={{
-                padding: '8px 12px',
-                borderRadius: '12px',
-                background: 'rgba(11, 15, 25, 0.8)',
-                backdropFilter: 'blur(8px)',
-                fontSize: '0.78rem'
-              }}
-            >
-              {isPlaying ? <Pause size={14} color="#ff7e67" /> : <Play size={14} color="#ff7e67" />}
-              {isPlaying ? 'Pause' : 'Play'}
-            </button>
-
-            <button
-              onClick={toggleMute}
-              className="btn-secondary"
-              style={{
-                padding: '8px 12px',
-                borderRadius: '12px',
-                background: 'rgba(11, 15, 25, 0.8)',
-                backdropFilter: 'blur(8px)',
-                fontSize: '0.78rem'
-              }}
-            >
-              {isMuted ? <VolumeX size={14} color="#94a3b8" /> : <Volume2 size={14} color="#34d399" />}
-              {isMuted ? 'Muted' : 'Sound On'}
-            </button>
-          </div>
-
-          {/* Floating Badge on Video */}
-          <div style={{
-            position: 'absolute',
-            top: '12px',
-            left: '12px',
-            background: 'rgba(11, 15, 25, 0.85)',
-            backdropFilter: 'blur(8px)',
-            padding: '6px 14px',
-            borderRadius: '9999px',
-            border: '1px solid rgba(255, 126, 103, 0.4)',
-            fontSize: '0.75rem',
-            fontWeight: 800,
-            color: '#ff7e67',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px'
-          }}>
-            <span className="pulse-dot" style={{ backgroundColor: '#ff7e67' }}></span> REAL DOG ANIMATION FEED
-          </div>
+          <PawPrint size={26} strokeWidth={2.5} />
+        </div>
+        <div>
+          <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
+            STREETPAW.AI
+          </span>
+          <span style={{ display: 'block', fontSize: '0.72rem', color: '#ff7e67', fontWeight: 700 }}>
+            DAYANANDA SAGAR UNIVERSITY MAJOR PROJECT
+          </span>
         </div>
       </div>
-    </div>
+
+      {/* Video Control Buttons Top Right */}
+      <div style={{
+        position: 'absolute',
+        top: '28px',
+        right: '40px',
+        zIndex: 10,
+        display: 'flex',
+        gap: '10px'
+      }}>
+        <button
+          onClick={togglePlay}
+          className="btn-secondary"
+          style={{
+            padding: '8px 16px',
+            borderRadius: '9999px',
+            background: 'rgba(11, 15, 25, 0.75)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            fontSize: '0.8rem',
+            color: '#fff'
+          }}
+        >
+          {isPlaying ? <Pause size={14} color="#ff7e67" /> : <Play size={14} color="#ff7e67" />}
+          {isPlaying ? 'Pause Video' : 'Play Video'}
+        </button>
+
+        <button
+          onClick={toggleMute}
+          className="btn-secondary"
+          style={{
+            padding: '8px 16px',
+            borderRadius: '9999px',
+            background: 'rgba(11, 15, 25, 0.75)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            fontSize: '0.8rem',
+            color: '#fff'
+          }}
+        >
+          {isMuted ? <VolumeX size={14} color="#94a3b8" /> : <Volume2 size={14} color="#34d399" />}
+          {isMuted ? 'Muted' : 'Sound On'}
+        </button>
+      </div>
+
+      {/* Main Center Cinema Content */}
+      <div style={{
+        position: 'relative',
+        zIndex: 10,
+        textAlign: 'center',
+        maxWidth: '880px',
+        padding: '0 24px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '20px'
+      }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 18px', background: 'rgba(255, 126, 103, 0.2)', border: '1px solid rgba(255, 126, 103, 0.4)', borderRadius: '9999px' }}>
+          <Sparkles size={14} color="#ff7e67" />
+          <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#ff7e67', letterSpacing: '0.05em' }}>
+            A COLLABORATIVE MULTI-AGENT AI PLATFORM FOR STRAY ANIMAL WELFARE
+          </span>
+        </div>
+
+        <h1 style={{
+          fontSize: '3.6rem',
+          fontWeight: 800,
+          lineHeight: '1.15',
+          margin: 0,
+          textShadow: '0 10px 30px rgba(0,0,0,0.8)'
+        }}>
+          Protecting Every Stray <br />
+          <span className="gradient-text">With Intelligent Vision AI 🐾</span>
+        </h1>
+
+        <p style={{
+          fontSize: '1.15rem',
+          color: 'rgba(248, 250, 252, 0.88)',
+          maxWidth: '680px',
+          lineHeight: '1.6',
+          margin: '0 auto',
+          textShadow: '0 4px 15px rgba(0,0,0,0.6)'
+        }}>
+          Real-time stray animal detection (Dogs, Cats, Pigs, Cows, etc.), visual re-identification, disease health risk profiling, and automated NGO rescue dispatch.
+        </p>
+
+        {/* CTA Button */}
+        <div style={{ display: 'flex', gap: '16px', marginTop: '10px' }}>
+          <button 
+            className="btn-primary"
+            onClick={scrollToImplementation}
+            style={{
+              padding: '16px 36px',
+              fontSize: '1.15rem',
+              borderRadius: '9999px',
+              boxShadow: '0 10px 35px rgba(255, 126, 103, 0.5)'
+            }}
+          >
+            <PawPrint size={22} /> Launch Animal Detection Engine
+          </button>
+        </div>
+      </div>
+
+      {/* Bouncing Scroll Down Indicator at Bottom */}
+      <div 
+        onClick={scrollToImplementation}
+        style={{
+          position: 'absolute',
+          bottom: '30px',
+          zIndex: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '6px',
+          cursor: 'pointer',
+          animation: 'pawFloat 2s infinite ease-in-out'
+        }}
+      >
+        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.8)', letterSpacing: '0.05em' }}>
+          SCROLL DOWN TO EXPLORE PLATFORM
+        </span>
+        <div style={{
+          width: '36px',
+          height: '36px',
+          borderRadius: '50%',
+          background: 'rgba(255, 126, 103, 0.25)',
+          border: '1px solid rgba(255, 126, 103, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#ff7e67'
+        }}>
+          <ChevronDown size={20} />
+        </div>
+      </div>
+    </section>
   );
 }
