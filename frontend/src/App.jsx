@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
+import HeroVideoBanner from './components/HeroVideoBanner';
 import DetectionCard from './components/DetectionCard';
 import MultiAgentWorkflow from './components/MultiAgentWorkflow';
 import HotspotMap from './components/HotspotMap';
 import AnimalVault from './components/AnimalVault';
-import { PawPrint, Cpu, Sparkles } from 'lucide-react';
+import { PawPrint, Sparkles } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('detect');
@@ -46,20 +47,33 @@ export default function App() {
         const reader = new FileReader();
         reader.onload = (e) => {
           const previewUrl = e.target.result;
-          const isCat = imageFile.name.toLowerCase().includes('cat');
+          const fileName = imageFile.name.toLowerCase();
+          
+          let species = "Neither";
+          if (fileName.includes('dog')) species = "Dog";
+          else if (fileName.includes('cat')) species = "Cat";
+          else if (fileName.includes('pig')) species = "Pig";
+          else if (fileName.includes('cow')) species = "Cow";
+          else if (fileName.includes('human') || fileName.includes('person')) species = "Human";
+          else if (fileName.includes('plant')) species = "Plant";
+
           setDetectionResult({
             success: true,
             processing_time_ms: 128.4,
-            total_animals_detected: 1,
+            total_animals_detected: (species !== "Neither" && species !== "Human" && species !== "Plant") ? 1 : 0,
             annotated_image: previewUrl,
             detections: [
               {
                 detection_id: 1,
-                animal_id: `ANIMAL-${Math.floor(1000 + Math.random() * 9000)}`,
-                species: isCat ? "Cat" : "Dog",
-                confidence: 96.8,
+                animal_id: `${species.toUpperCase().slice(0, 3)}-${Math.floor(1000 + Math.random() * 9000)}`,
+                species: species,
+                is_animal: (species !== "Neither" && species !== "Human" && species !== "Plant"),
+                is_human: (species === "Human"),
+                is_plant: (species === "Plant"),
+                confidence: species === "Neither" ? 0.0 : 96.8,
                 bbox: [80, 60, 480, 340],
                 roi_crop: previewUrl,
+                message: species === "Human" ? "Human / Person detected." : species === "Plant" ? "Plant detected." : "Stray animal identified.",
                 timestamp: new Date().toLocaleString()
               }
             ]
@@ -84,44 +98,15 @@ export default function App() {
       {/* Navigation Header */}
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} apiStatus={apiStatus} />
 
-      {/* Hero Banner Section */}
+      {/* Main Container */}
       <div style={{
-        padding: '36px 32px 18px',
+        padding: '28px 32px 18px',
         maxWidth: '1400px',
         margin: '0 auto',
         width: '100%'
       }}>
-        <div className="glass-panel" style={{
-          padding: '24px 32px',
-          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '16px'
-        }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <Sparkles size={16} color="#10b981" />
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#34d399', letterSpacing: '0.05em' }}>
-                DAYANANDA SAGAR UNIVERSITY — MAJOR PROJECT PHASE-I (2026-2027)
-              </span>
-            </div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>
-              Step 1: Stray Animal Detection Engine (Dogs & Cats)
-            </h2>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ textAlign: 'center', padding: '8px 16px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px' }}>
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Detection Engine</span>
-              <p style={{ fontWeight: 700, color: '#10b981', margin: 0 }}>YOLOv8 Nano</p>
-            </div>
-            <div style={{ textAlign: 'center', padding: '8px 16px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px' }}>
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Target Species</span>
-              <p style={{ fontWeight: 700, color: '#06b6d4', margin: 0 }}>Dog & Cat</p>
-            </div>
-          </div>
-        </div>
+        {/* Animated Dog Video Hero Banner */}
+        <HeroVideoBanner />
       </div>
 
       {/* Main App Content Body */}
@@ -150,16 +135,16 @@ export default function App() {
 
       {/* Footer */}
       <footer style={{
-        borderTop: '1px solid rgba(255,255,255,0.08)',
+        borderTop: '1px solid rgba(255,126,103,0.15)',
         padding: '24px 32px',
-        background: 'rgba(9, 13, 22, 0.95)',
+        background: 'rgba(11, 15, 25, 0.95)',
         textAlign: 'center',
         color: 'var(--text-muted)',
         fontSize: '0.85rem'
       }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <PawPrint size={18} color="#10b981" />
+            <PawPrint size={18} color="#ff7e67" />
             <span>StreetPaw.AI — Department of Computer Science & Engineering</span>
           </div>
           <div>
