@@ -317,27 +317,119 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
                       </p>
                     </div>
                   ) : det.is_animal ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: det.roi_crop ? '110px 1fr' : '1fr', gap: '16px', alignItems: 'center' }}>
-                      {det.roi_crop && (
-                        <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 126, 103, 0.3)', background: '#000', width: '110px', height: '110px' }}>
-                          <img src={det.roi_crop} alt="Cropped ROI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          <span style={{ display: 'block', fontSize: '0.65rem', textAlign: 'center', background: 'rgba(0,0,0,0.85)', color: '#94a3b8', fontWeight: 600 }}>CROPPED ROI</span>
-                        </div>
-                      )}
-                      <div>
-                        <div style={{ marginBottom: '8px' }}>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bounding Box Coordinates:</span>
-                          <p style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#f8fafc', fontSize: '0.9rem', marginTop: '2px' }}>
-                            [{det.bbox.join(', ')}]
-                          </p>
-                        </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      {/* ROI + Basic Info Row */}
+                      <div style={{ display: 'grid', gridTemplateColumns: det.roi_crop ? '110px 1fr' : '1fr', gap: '16px', alignItems: 'center' }}>
+                        {det.roi_crop && (
+                          <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 126, 103, 0.3)', background: '#000', width: '110px', height: '110px' }}>
+                            <img src={det.roi_crop} alt="Cropped ROI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <span style={{ display: 'block', fontSize: '0.65rem', textAlign: 'center', background: 'rgba(0,0,0,0.85)', color: '#94a3b8', fontWeight: 600 }}>CROPPED ROI</span>
+                          </div>
+                        )}
                         <div>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Identified Animal:</span>
-                          <p style={{ fontWeight: 700, color: badgeStyle.text, fontSize: '1rem', marginTop: '2px' }}>
-                            {det.species} (Confirmed Stray Animal)
-                          </p>
+                          <div style={{ marginBottom: '8px' }}>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bounding Box Coordinates:</span>
+                            <p style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#f8fafc', fontSize: '0.9rem', marginTop: '2px' }}>
+                              [{det.bbox.join(', ')}]
+                            </p>
+                          </div>
+                          <div>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Identified Animal:</span>
+                            <p style={{ fontWeight: 700, color: badgeStyle.text, fontSize: '1rem', marginTop: '2px' }}>
+                              {det.species} (Confirmed Stray Animal)
+                            </p>
+                          </div>
                         </div>
                       </div>
+
+                      {/* ── Breed Detection Card (only for Dogs) ───────── */}
+                      {det.species === 'Dog' && det.breed_model_ready && det.breed && det.breed !== 'Unknown' && (
+                        <div style={{
+                          background: 'linear-gradient(135deg, rgba(129,185,16,0.12), rgba(16,185,129,0.08))',
+                          border: '1px solid rgba(129,185,16,0.35)',
+                          borderRadius: '16px',
+                          padding: '18px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '12px'
+                        }}>
+                          {/* Header */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontSize: '1.3rem' }}>🐾</span>
+                              <span style={{ fontSize: '0.72rem', color: '#81b910', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800 }}>
+                                Breed Identified (EfficientNet-B3 + TTA)
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Top Breed */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#ffffff', letterSpacing: '0.01em' }}>
+                              {det.breed}
+                            </span>
+                            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 900, fontSize: '1.5rem', color: '#81b910' }}>
+                              {det.breed_confidence}%
+                            </span>
+                          </div>
+
+                          {/* Main confidence bar */}
+                          <div style={{ height: '8px', borderRadius: '9999px', background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                            <div style={{
+                              height: '100%',
+                              width: `${det.breed_confidence}%`,
+                              borderRadius: '9999px',
+                              background: 'linear-gradient(90deg, #81b910, #34d399)',
+                              transition: 'width 0.8s ease'
+                            }} />
+                          </div>
+
+                          {/* Top-3 breakdown */}
+                          {det.breed_top3 && det.breed_top3.length > 1 && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '7px', marginTop: '4px' }}>
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>
+                                Top Predictions
+                              </span>
+                              {det.breed_top3.map((b, i) => (
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <span style={{
+                                    fontSize: '0.78rem',
+                                    fontWeight: 700,
+                                    color: i === 0 ? '#ffffff' : 'var(--text-muted)',
+                                    minWidth: '160px'
+                                  }}>
+                                    {i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'} {b.breed}
+                                  </span>
+                                  <div style={{ flex: 1, height: '5px', borderRadius: '9999px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                                    <div style={{
+                                      height: '100%',
+                                      width: `${b.confidence}%`,
+                                      borderRadius: '9999px',
+                                      background: i === 0
+                                        ? 'linear-gradient(90deg, #81b910, #34d399)'
+                                        : i === 1
+                                        ? 'rgba(129,185,16,0.55)'
+                                        : 'rgba(129,185,16,0.3)'
+                                    }} />
+                                  </div>
+                                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: i === 0 ? '#81b910' : 'var(--text-muted)', minWidth: '44px', textAlign: 'right' }}>
+                                    {b.confidence}%
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Model not ready notice */}
+                      {det.species === 'Dog' && !det.breed_model_ready && (
+                        <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)' }}>
+                          <p style={{ color: '#fbbf24', fontWeight: 600, fontSize: '0.85rem', margin: 0 }}>
+                            🔧 Breed model not trained yet. Run <code>train_breed.py</code> to enable breed detection.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
