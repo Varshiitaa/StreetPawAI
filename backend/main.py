@@ -10,6 +10,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pig_classifier import init_classifier, classify_roi
 from animal_reid import AnimalReID
+from breed_classifier import init_breed_classifier, classify_breed, is_model_ready
 
 # Initialize FastAPI App
 app = FastAPI(
@@ -76,6 +77,8 @@ def load_models():
             print(f"[ERROR] Failed to load Animal Re-ID model: {e}")
             reid_model = None
 
+    init_breed_classifier()
+
 @app.on_event("startup")
 async def startup_event():
     load_models()
@@ -86,7 +89,8 @@ def read_root():
         "status": "online",
         "service": "StreetPaw.AI Strict Vision Engine",
         "supported_animals": SUPPORTED_SPECIES,
-        "yolo_active": yolo_model is not None
+        "yolo_active": yolo_model is not None,
+        "breed_model_ready": is_model_ready()
     }
 
 @app.get("/api/health")
@@ -94,7 +98,8 @@ def health_check():
     return {
         "status": "healthy",
         "timestamp": time.time(),
-        "yolo_active": yolo_model is not None
+        "yolo_active": yolo_model is not None,
+        "breed_model_ready": is_model_ready()
     }
 
 def convert_np_to_base64(img_np):
@@ -244,7 +249,26 @@ async def detect_animal(file: UploadFile = File(...)):
                 cv2.putText(annotated_img, label, (x1 + 5, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 0, 0), 2)
                 
                 animal_id = f"{refined_species.upper()[:3]}-{random.randint(1000, 9999)}"
-                
+
+                # ── Breed Classification (only for Dogs) ──────────────
+                breed_info = {}
+                if refined_species == "Dog":
+                    breed_result = classify_breed(roi_pil, use_tta=True)
+                    breed_info = {
+                        "breed":            breed_result.get("breed", "Unknown"),
+                        "breed_confidence": breed_result.get("confidence", 0.0),
+                        "breed_top3":       breed_result.get("top3", []),
+                        "breed_model_ready": breed_result.get("model_ready", False)
+                    }
+                    # Annotate breed on image
+                    if breed_result.get("model_ready") and breed_result.get("breed") != "Unknown":
+                        breed_label = f"Breed: {breed_result['breed']} ({breed_result['confidence']:.1f}%)"
+                        cv2.putText(annotated_img, breed_label,
+                                    (x1 + 5, y2 + 20),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.55,
+                                    color, 2)
+                # ──────────────────────────────────────────────────────
+
                 detections.append({
                     "detection_id": idx + 1,
                     "animal_id": animal_id,
@@ -255,7 +279,8 @@ async def detect_animal(file: UploadFile = File(...)):
                     "confidence": round(final_conf, 2),
                     "bbox": [x1, y1, x2, y2],
                     "roi_crop": roi_base64,
-                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                    **breed_info
                 })
                 found_valid_animal = True
 
