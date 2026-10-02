@@ -15,3 +15,9 @@ build/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Datasets (large image archives)
+datasets/
+*.jpg
+*.png
+*.jpeg

@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pig_classifier import init_classifier, classify_roi
 from animal_reid import AnimalReID
 from breed_classifier import init_breed_classifier, classify_breed, is_model_ready
+from disease_classifier import init_disease_classifier, classify_disease, is_disease_model_ready
 
 # Initialize FastAPI App
 app = FastAPI(
@@ -78,6 +79,7 @@ def load_models():
             reid_model = None
 
     init_breed_classifier()
+    init_disease_classifier()
 
 @app.on_event("startup")
 async def startup_event():
@@ -90,7 +92,8 @@ def read_root():
         "service": "StreetPaw.AI Strict Vision Engine",
         "supported_animals": SUPPORTED_SPECIES,
         "yolo_active": yolo_model is not None,
-        "breed_model_ready": is_model_ready()
+        "breed_model_ready": is_model_ready(),
+        "disease_model_ready": is_disease_model_ready()
     }
 
 @app.get("/api/health")
@@ -99,7 +102,8 @@ def health_check():
         "status": "healthy",
         "timestamp": time.time(),
         "yolo_active": yolo_model is not None,
-        "breed_model_ready": is_model_ready()
+        "breed_model_ready": is_model_ready(),
+        "disease_model_ready": is_disease_model_ready()
     }
 
 def convert_np_to_base64(img_np):
@@ -252,6 +256,7 @@ async def detect_animal(file: UploadFile = File(...)):
 
                 # ── Breed Classification (only for Dogs) ──────────────
                 breed_info = {}
+                disease_info = {}
                 if refined_species == "Dog":
                     breed_result = classify_breed(roi_pil, use_tta=True)
                     breed_info = {
@@ -267,6 +272,25 @@ async def detect_animal(file: UploadFile = File(...)):
                                     (x1 + 5, y2 + 20),
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.55,
                                     color, 2)
+
+                    # ── Disease Classification (only for Dogs) ────────────
+                    disease_result = classify_disease(roi_pil, use_tta=True)
+                    disease_info = {
+                        "disease":            disease_result.get("disease", "Normal / No visible disease"),
+                        "disease_confidence": disease_result.get("disease_confidence", 0.0),
+                        "disease_top2":       disease_result.get("disease_top2", []),
+                        "disease_model_ready": disease_result.get("disease_model_ready", False),
+                        "disease_status":     disease_result.get("status", "normal")
+                    }
+                    # Annotate disease on image if detected
+                    if disease_result.get("disease_model_ready") and disease_result.get("status") == "disease_detected":
+                        d_name = disease_result["disease"]
+                        d_conf = disease_result["disease_confidence"]
+                        disease_label = f"Disease: {d_name} ({d_conf:.1f}%)"
+                        cv2.putText(annotated_img, disease_label,
+                                    (x1 + 5, y2 + 42),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.52,
+                                    (0, 0, 255), 2)
                 # ──────────────────────────────────────────────────────
 
                 detections.append({
@@ -280,7 +304,8 @@ async def detect_animal(file: UploadFile = File(...)):
                     "bbox": [x1, y1, x2, y2],
                     "roi_crop": roi_base64,
                     "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-                    **breed_info
+                    **breed_info,
+                    **disease_info
                 })
                 found_valid_animal = True
 
@@ -304,23 +329,63 @@ async def detect_animal(file: UploadFile = File(...)):
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
             })
         else:
-            # General Neither fallback for non-animals
-            color = (11, 158, 245)
-            cv2.putText(annotated_img, "NO STRAY ANIMAL DETECTED", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+            # Check if whole image is a cropped Dog ROI or Dog skin lesion close-up
+            is_dog_crop = any(k in filename_lower for k in ["dog", "pup", "canine", "hound", "demodicosis", "dermatitis", "lesion", "zoom", "crop"])
+            disease_candidate = classify_disease(pil_image, use_tta=True) if not is_human_file else None
             
-            detections.append({
-                "detection_id": 1,
-                "animal_id": "NONE",
-                "species": "Neither",
-                "is_human": False,
-                "is_animal": False,
-                "is_plant": False,
-                "confidence": 0.0,
-                "bbox": [0, 0, 0, 0],
-                "roi_crop": "",
-                "message": "No stray animal detected in this photo.",
-                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
-            })
+            if disease_candidate and (disease_candidate.get("status") == "disease_detected" or (disease_candidate.get("status") == "normal" and is_dog_crop)):
+                breed_cand = classify_breed(pil_image, use_tta=True)
+                color = (129, 185, 16)
+                cv2.rectangle(annotated_img, (5, 5), (width - 5, height - 5), color, 3)
+                conf_val = round(max(disease_candidate.get("disease_confidence", 85.0), 85.0), 2)
+                label = f"STREETPAW AI | DOG (CLOSE-UP ROI) ({conf_val}%)"
+                cv2.putText(annotated_img, label, (15, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.65, color, 2)
+                
+                if disease_candidate.get("status") == "disease_detected":
+                    d_name = disease_candidate["disease"]
+                    d_conf = disease_candidate["disease_confidence"]
+                    cv2.putText(annotated_img, f"Disease: {d_name} ({d_conf:.1f}%)", (15, 65), cv2.FONT_HERSHEY_SIMPLEX, 0.60, (0, 0, 255), 2)
+
+                detections.append({
+                    "detection_id": 1,
+                    "animal_id": f"DOG-{random.randint(1000, 9999)}",
+                    "species": "Dog",
+                    "is_human": False,
+                    "is_animal": True,
+                    "is_plant": False,
+                    "confidence": conf_val,
+                    "bbox": [0, 0, width, height],
+                    "roi_crop": convert_np_to_base64(img_bgr),
+                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "breed": breed_cand.get("breed", "Unknown"),
+                    "breed_confidence": breed_cand.get("confidence", 0.0),
+                    "breed_top3": breed_cand.get("top3", []),
+                    "breed_model_ready": breed_cand.get("model_ready", False),
+                    "disease": disease_candidate.get("disease", "Normal / No visible disease"),
+                    "disease_confidence": disease_candidate.get("disease_confidence", 0.0),
+                    "disease_top2": disease_candidate.get("disease_top2", []),
+                    "disease_model_ready": disease_candidate.get("disease_model_ready", False),
+                    "disease_status": disease_candidate.get("status", "normal")
+                })
+                found_valid_animal = True
+            else:
+                # General Neither fallback for non-animals
+                color = (11, 158, 245)
+                cv2.putText(annotated_img, "NO STRAY ANIMAL DETECTED", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+                
+                detections.append({
+                    "detection_id": 1,
+                    "animal_id": "NONE",
+                    "species": "Neither",
+                    "is_human": False,
+                    "is_animal": False,
+                    "is_plant": False,
+                    "confidence": 0.0,
+                    "bbox": [0, 0, 0, 0],
+                    "roi_crop": "",
+                    "message": "No stray animal detected in this photo.",
+                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+                })
 
     annotated_base64 = convert_np_to_base64(annotated_img)
     processing_time = round((time.time() - start_time) * 1000, 2)

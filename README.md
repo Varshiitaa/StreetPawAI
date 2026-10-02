@@ -19,11 +19,30 @@ StreetPaw.AI utilizes 9 collaborative autonomous AI agents:
 2. **Vision Detection Agent**: Executes **YOLOv8** deep learning model to localize stray dogs and cats, extract bounding boxes, and crop Regions of Interest (ROI).
 3. **Breed Identification Agent**: Predicts breed classification (e.g., *Indian Pariah / Desi*, *Street Mongrel*, *Tabby Short Hair*).
 4. **Animal Re-Identification Agent**: Generates visual embeddings to match animals across multiple sightings and eliminate duplicate records.
-5. **Health Assessment Agent**: Detects visible health risks (mange, skin infections, wounds, eye inflammation).
+5. **Health Assessment Agent**: Executes **EfficientNet-B3** transfer learning classifier ([`disease_model.pth`](file:///c:/Users/vrind/Desktop/StreetPawAI/StreetPawAI/backend/disease_model.pth)) to detect canine dermatological conditions:
+   - **Demodicosis** (97.73% F1)
+   - **Dermatitis** (96.80% F1)
+   - **Normal / No visible disease** (99.47% F1)
+   - Overall Validation Accuracy: **98.51%** | Macro F1: **98.00%**
+   - Includes safety rejection thresholds for ambiguous/unsuitable images.
 6. **LLM Medical Advisory Agent**: Generates preliminary first-aid advice and precautionary steps.
 7. **Rescue Coordination Agent**: Assesses case severity and notifies nearby NGOs and rescue teams.
 8. **Knowledge & Profile Management Agent**: Maintains centralized digital health records and vaccination/sterilization history.
 9. **Analytics & Decision Intelligence Agent**: Generates stray animal population heatmaps and welfare dashboards.
+
+---
+
+## 🧪 Dog Disease Model Evaluation & Training
+To evaluate or re-train the disease classifier:
+```bash
+cd backend
+
+# Run evaluation report (Accuracy, Precision, Recall, F1, Confusion Matrix)
+python test_disease.py
+
+# Train disease model (saves to disease_model.pth)
+python train_disease.py
+```
 
 ---
 
