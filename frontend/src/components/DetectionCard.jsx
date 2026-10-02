@@ -13,7 +13,7 @@ const SAMPLE_PLANT = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000
 
 const SAMPLE_HUMAN = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23312e81'/><circle cx='300' cy='150' r='60' fill='%23fed7aa'/><path d='M 180 340 C 180 230, 420 230, 420 340 Z' fill='%234338ca'/><text x='300' y='360' font-family='Arial' font-size='20' font-weight='bold' fill='%23ffffff' text-anchor='middle'>HUMAN / PERSON SAMPLE PHOTO 👤</text></svg>";
 
-export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, resetDetection }) {
+export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, animalIdResult, resetDetection }) {
   const [dragActive, setDragActive] = useState(false);
   const [selectedImagePreview, setSelectedImagePreview] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -336,11 +336,47 @@ export default function DetectionCard({ onAnalyze, isAnalyzing, resultData, rese
                           <p style={{ fontWeight: 700, color: badgeStyle.text, fontSize: '1rem', marginTop: '2px' }}>
                             {det.species} (Confirmed Stray Animal)
                           </p>
+                          {animalIdResult && det.species === 'Dog' && (
+  <div style={{
+    marginTop: '14px',
+    padding: '14px',
+    borderRadius: '14px',
+    background: 'rgba(59, 130, 246, 0.12)',
+    border: '1px solid rgba(59, 130, 246, 0.3)'
+  }}>
+    <p style={{
+      color: '#60a5fa',
+      fontWeight: 800,
+      fontSize: '0.95rem',
+      margin: 0
+    }}>
+      🆔 Animal ID: {animalIdResult.animal_id}
+    </p>
+
+    <p style={{
+      color: 'var(--text-muted)',
+      fontSize: '0.82rem',
+      marginTop: '6px'
+    }}>
+       {(animalIdResult.similarity * 100).toFixed(2)}%
+    </p>
+
+    <p style={{
+      color: animalIdResult.is_unknown ? '#fbbf24' : '#34d399',
+      fontWeight: 700,
+      fontSize: '0.82rem',
+      marginTop: '4px'
+    }}>
+      {animalIdResult.is_unknown ? 'Unknown / New Animal' : 'Known Animal'}
+    </p>
+  </div>
+)}
+                          
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+               <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
                       <p style={{ color: '#fbbf24', fontWeight: 600, fontSize: '0.9rem', margin: 0 }}>
                         ⚠️ {det.message}
                       </p>

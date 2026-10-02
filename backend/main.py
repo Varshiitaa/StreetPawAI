@@ -9,6 +9,7 @@ import numpy as np
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pig_classifier import init_classifier, classify_roi
+from animal_reid import AnimalReID
 
 # Initialize FastAPI App
 app = FastAPI(
@@ -28,6 +29,7 @@ app.add_middleware(
 
 # Global YOLO model holder
 yolo_model = None
+reid_model = None
 
 # Known COCO Plant / Non-Animal Object classes
 NON_ANIMAL_COCO_CLASSES = {
@@ -53,7 +55,7 @@ NON_ANIMAL_COCO_CLASSES = {
 SUPPORTED_SPECIES = ["Dog", "Cat", "Cow", "Bull", "Buffalo", "Pig", "Donkey", "Horse", "Human", "Plant", "Neither"]
 
 def load_models():
-    global yolo_model
+    global yolo_model, reid_model
     if yolo_model is None:
         try:
             from ultralytics import YOLO
@@ -65,6 +67,14 @@ def load_models():
             yolo_model = None
             
     init_classifier()
+    if reid_model is None:
+        try:
+            print("[INFO] Loading Animal Re-ID model...")
+            reid_model = AnimalReID()
+            print("[SUCCESS] Animal Re-ID model loaded successfully!")
+        except Exception as e:
+            print(f"[ERROR] Failed to load Animal Re-ID model: {e}")
+            reid_model = None
 
 @app.on_event("startup")
 async def startup_event():
@@ -297,7 +307,54 @@ async def detect_animal(file: UploadFile = File(...)):
         "annotated_image": annotated_base64,
         "detections": detections
     }
+@app.post("/api/animal-id")
+async def identify_animal(file: UploadFile = File(...)):
+    """
+    Animal Re-ID endpoint.
+    Upload a dog image and return the closest known identity.
+    """
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=400,
+            detail="Uploaded file is not a valid image."
+        )
 
+    global reid_model
+
+    if reid_model is None:
+        load_models()
+
+    if reid_model is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Animal Re-ID model is not available."
+        )
+
+    try:
+        contents = await file.read()
+        pil_image = Image.open(io.BytesIO(contents)).convert("RGB")
+
+        result = reid_model.identify(
+            pil_image,
+            threshold=0.50,
+            top_k=5
+        )
+
+        return {
+            "success": True,
+            "filename": file.filename,
+            "animal_id": result["animal_id"],
+            "is_unknown": result["is_unknown"],
+            "similarity": round(result["similarity"], 4),
+            "threshold": result["threshold"],
+            "top_matches": result["top_k"]
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Animal Re-ID failed: {str(e)}"
+        )
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
