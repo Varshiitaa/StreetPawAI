@@ -32,18 +32,20 @@ BACKEND_DIR = Path(__file__).resolve().parent
 
 CHECKPOINT_PATH = BACKEND_DIR / "reid_training_output" / "best.pth"
 
-GALLERY_DIR = Path(
+_HARDCODED_GALLERY = Path(
     r"C:\Users\Geyas\OneDrive\Desktop\Streetpaw\Dog Face Recognition"
     r"\DogFaceNet - Dog Face Recognition\test_200_database"
 )
+GALLERY_DIR = _HARDCODED_GALLERY if _HARDCODED_GALLERY.is_dir() else BACKEND_DIR / "gallery"
 
 CACHE_PATH = BACKEND_DIR / "reid_cache" / "gallery_cache.npz"
 
 REGISTRY_PATH = BACKEND_DIR / "reid_cache" / "animal_registry.json"
 
-TORCHREID_REPO = Path(
+_HARDCODED_TORCHREID = Path(
     r"C:\Users\Geyas\OneDrive\Desktop\Streetpaw\deep-person-reid"
 )
+TORCHREID_REPO = _HARDCODED_TORCHREID if _HARDCODED_TORCHREID.is_dir() else BACKEND_DIR
 
 DEFAULT_MODEL_NAME = "osnet_x0_25"
 
@@ -546,39 +548,32 @@ class AnimalReID:
             meta["std"]
         )
 
+        cache_file = Path(cache_path)
         if not self.gallery_dir.is_dir():
+            self.gallery_dir.mkdir(parents=True, exist_ok=True)
+            if not cache_file.is_file():
+                print(f"[INFO] Empty gallery created at {self.gallery_dir}")
 
-            sys.exit(
-                f"Gallery folder not found: "
-                f"{self.gallery_dir}"
+        if cache_file.is_file() and use_cache and not rebuild_cache:
+            try:
+                with np.load(cache_file, allow_pickle=False) as z:
+                    self.names = list(z["names"])
+                    self.gallery = z["embeddings"]
+                    self.counts = z["counts"]
+                print(f"Gallery loaded from cache: {cache_file}")
+            except Exception as e:
+                print(f"[WARN] Failed to load cache {cache_file}: {e}")
+                fp, n_imgs = gallery_fingerprint(self.gallery_dir)
+                cache_key = hashlib.sha1(f"{sha1_of_file(self.checkpoint_path)}|{fp}|{self.image_size}".encode()).hexdigest()
+                (self.names, self.gallery, self.counts) = load_or_build_gallery(
+                    self.model, self.gallery_dir, self.transform, self.device, cache_file, cache_key, use_cache, rebuild_cache
+                )
+        else:
+            fp, n_imgs = gallery_fingerprint(self.gallery_dir)
+            cache_key = hashlib.sha1(f"{sha1_of_file(self.checkpoint_path)}|{fp}|{self.image_size}".encode()).hexdigest()
+            (self.names, self.gallery, self.counts) = load_or_build_gallery(
+                self.model, self.gallery_dir, self.transform, self.device, cache_file, cache_key, use_cache, rebuild_cache
             )
-
-        fp, n_imgs = gallery_fingerprint(
-            self.gallery_dir
-        )
-
-        cache_key = hashlib.sha1(
-            (
-                f"{sha1_of_file(self.checkpoint_path)}"
-                f"|{fp}"
-                f"|{self.image_size}"
-            ).encode()
-        ).hexdigest()
-
-        (
-            self.names,
-            self.gallery,
-            self.counts
-        ) = load_or_build_gallery(
-            self.model,
-            self.gallery_dir,
-            self.transform,
-            self.device,
-            Path(cache_path),
-            cache_key,
-            use_cache,
-            rebuild_cache
-        )
 
         print(
             f"Gallery: {len(self.names)} identities, "
